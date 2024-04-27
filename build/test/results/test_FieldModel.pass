@@ -1,0 +1,62 @@
+---
+:source:
+  :path: test
+  :file: test_FieldModel.c
+:successes:
+- :test: test_FieldModel_CreateAndDestroyFieldPtr
+  :line: 19
+  :message: ''
+  :unity_test_time: 0
+- :test: test_FieldModel_CreateFailsOnInvalidDimension
+  :line: 30
+  :message: ''
+  :unity_test_time: 0
+- :test: test_FieldModel_CreateFailsOnInvalidScale
+  :line: 43
+  :message: ''
+  :unity_test_time: 0
+- :test: test_FieldModel_GetDimension
+  :line: 56
+  :message: ''
+  :unity_test_time: 0
+- :test: test_FieldModel_GetScale
+  :line: 67
+  :message: ''
+  :unity_test_time: 0
+- :test: test_FieldModel_GetRevealedState
+  :line: 78
+  :message: ''
+  :unity_test_time: 0
+- :test: test_FieldModel_SetRevealedState
+  :line: 87
+  :message: ''
+  :unity_test_time: 0
+- :test: test_FieldModel_GetFlaggedState
+  :line: 99
+  :message: ''
+  :unity_test_time: 0
+- :test: test_FieldModel_SetFlaggedState
+  :line: 108
+  :message: ''
+  :unity_test_time: 0
+- :test: test_FieldModel_GetMinedState
+  :line: 120
+  :message: ''
+  :unity_test_time: 0
+- :test: test_FieldModel_SetMinedState
+  :line: 129
+  :message: ''
+  :unity_test_time: 0
+- :test: test_FieldModel_CountMinedNeighbors
+  :line: 141
+  :message: ''
+  :unity_test_time: 0
+:failures: []
+:ignores: []
+:counts:
+  :total: 12
+  :passed: 12
+  :failed: 0
+  :ignored: 0
+:stdout: []
+:time: 0.011923991000003298
