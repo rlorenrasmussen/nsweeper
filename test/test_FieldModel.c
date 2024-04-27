@@ -7,6 +7,8 @@
 // DONE: cache numNeighboringMines, increment on PlaceMine, decrement on RemoveMine
 // TODO: initializeBoard(coordinates) -- this will place mines randomly but guarantee the given coordinates will be mine-free
 // TODO: bloom(coordinates) -- check if uncovered and minedNeighbors==0 -> then reveal all neighbors (like flood, but stops at the first layer of neighbors)
+// TODO: save Field to file
+// TODO: retrieve Field from file
 
 void setUp(void)
 {
