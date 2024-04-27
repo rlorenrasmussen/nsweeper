@@ -18,9 +18,4 @@ void tearDown(void)
 {
 }
 
-void test_FieldView_ReportStoredPaneVector(void)
-{
-  
-}
-
 #endif // TEST
