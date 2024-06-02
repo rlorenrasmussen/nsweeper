@@ -193,7 +193,7 @@ void Field_RemoveMine(FieldPtr F, unsigned int* coordinates)
     {
       copy_coordinates[j] = coordinates[j] + displacements[j];
       notAllZeros |= 0 != displacements[j];
-      allCoordinatesValid &= (coordinates[j] != 0 || displacements[j] > -1) && Field_Scale(F) > copy_coordinates[j];
+      allCoordinatesValid &= (0 != coordinates[j] || -1 < displacements[j]) && Field_Scale(F) > copy_coordinates[j];
     }
     if (notAllZeros && allCoordinatesValid)
     {
