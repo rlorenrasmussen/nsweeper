@@ -164,14 +164,26 @@ void test_FieldModel_CountMinedNeighbors(void)
             for (int f = 0; f < 8; f++)
             {
               coordinates[5] = f;
-              TEST_ASSERT_EQUAL((((0!=a)||(0!=b)||(0!=c)||(0!=d)||(0!=e)||(0!=f)) &&
-                                1 >= a &&
-                                1 >= b &&
-                                1 >= c &&
-                                1 >= d &&
-                                1 >= e &&
-                                1 >= f) ? 1 : 0,
-                                Field_NumMinesNeighboring(F,coordinates));
+              TEST_ASSERT_EQUAL(
+                (
+                  (
+                    (0!=a)||
+                    (0!=b)||
+                    (0!=c)||
+                    (0!=d)||
+                    (0!=e)||
+                    (0!=f)
+                  ) &&
+                  1 >= a &&
+                  1 >= b &&
+                  1 >= c &&
+                  1 >= d &&
+                  1 >= e &&
+                  1 >= f
+                ) ? 
+                1 : 0,
+                Field_NumMinesNeighboring(F,coordinates)
+              );
             }
           }
         }
