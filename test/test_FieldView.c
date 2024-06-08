@@ -18,21 +18,28 @@
 static FieldPtr F;
 static Screen_t ScreenBuffer;
 
-static bool bufferMatchesFile(Screen_t S, FILE* FP)
+static void bufferMatchesFile(Screen_t S, FILE* FP)
 {
+  bool fileExhausted;
+  char line[SCREEN_W+1] = {0};
   if (NULL == FP)
   {
-    return false;
+    return;
   }
-  char line[SCREEN_W+1] = {0};
-  for (int i; i < SCREEN_H && fgets(line,SCREEN_W+1,FP); i++)
+  fileExhausted = false;
+  for (int i; i < SCREEN_H; i++)
   {
-    if (0 != strcmp(S.buffer[i],line))
+    if (!fileExhausted && fgets(line,SCREEN_W+1,FP))
     {
-      return false;
+      TEST_ASSERT_EQUAL_STRING(line,S.buff[i]);
+    }
+    else
+    {
+      fileExhausted = true;
+      // TODO: test for empty strings after EOF
+      // TEST_ASSERT_EQUAL(0,S.buff[i][0]);
     }
   }
-  return true;
 }
 
 void setUp(void)
@@ -40,10 +47,10 @@ void setUp(void)
   F = NULL;
   ScreenBuffer.W = SCREEN_W;
   ScreenBuffer.H = SCREEN_H;
-  ScreenBuffer.buffer = calloc(SCREEN_H,sizeof(char*));
+  ScreenBuffer.buff = calloc(SCREEN_H,sizeof(char*));
   for (int i = 0; i < SCREEN_H; i++)
   {
-    ScreenBuffer.buffer[i] = calloc(SCREEN_W,sizeof(char));
+    ScreenBuffer.buff[i] = calloc(SCREEN_W,sizeof(char));
   }
 }
 
@@ -52,9 +59,9 @@ void tearDown(void)
   Field_Destroy(F);
   for (int i = 0; i < SCREEN_H; i++)
   {
-    free(ScreenBuffer.buffer[i]);
+    free(ScreenBuffer.buff[i]);
   }
-  free(ScreenBuffer.buffer);
+  free(ScreenBuffer.buff);
 }
 
 void test_FieldView_InitializesWithFieldPtr(void)
@@ -79,7 +86,7 @@ void test_FieldView_ReportsPaneVectorSize(void)
   }
 }
 
-void test_DrawsGridToDisplayBuffer(void)
+void test_FieldView_DrawsCompletePane1ToBuffer(void)
 {
   unsigned int coordinates[3] = {0};
   unsigned int paneVector[1] = {1};
@@ -98,19 +105,31 @@ void test_DrawsGridToDisplayBuffer(void)
         coordinates[2] = k;
         if (1 == i && 1 == j && 1 == k)
         {
+          Field_Reveal(F,coordinates);
           continue;
         }
         Field_PlaceMine(F,coordinates);
+        Field_Reveal(F,coordinates);
       }
     }
   }
   (void) FieldView_Init(F,&ScreenBuffer);
   FieldView_Draw(paneVector);
   fptr = fopen("/home/loren/Dev/c/nsweeper/test/assets/sampleview1","r");
-  match = bufferMatchesFile(ScreenBuffer,fptr);
+  bufferMatchesFile(ScreenBuffer,fptr);
   fclose(fptr);
+}
 
-  TEST_ASSERT_TRUE(match);
+void test_FieldView_DrawsCompletePane2ToBuffer(void)
+{
+  unsigned int paneVector[4] = {7,1,0,6};
+  FILE* fptr;
+  F = Field_Create(6,8);
+  (void) FieldView_Init(F,&ScreenBuffer);
+  FieldView_Draw(paneVector);
+  fptr = fopen("/home/loren/Dev/c/nsweeper/test/assets/sampleview2","r");
+  bufferMatchesFile(ScreenBuffer,fptr);
+  fclose(fptr);
 }
 
 void ignore_FieldView_ReportsPaneVector(void)
