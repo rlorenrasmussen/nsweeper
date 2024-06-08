@@ -148,37 +148,76 @@ void test_FieldModel_CountMinedNeighbors(void)
   Field_PlaceMine(F,coordinates);
   for (int a = 0; a < 8; a++)
   {
-  coordinates[0] = a;
-  for (int b = 0; b < 8; b++)
-  {
-  coordinates[1] = b;
-  for (int c = 0; c < 8; c++)
-  {
-  coordinates[2] = c;
-  for (int d = 0; d < 8; d++)
-  {
-  coordinates[3] = d;
-  for (int e = 0; e < 8; e++)
-  {
-  coordinates[4] = e;
-  for (int f = 0; f < 8; f++)
-  {
-    coordinates[5] = f;
-    TEST_ASSERT_EQUAL((((a!=0)||(b!=0)||(c!=0)||(d!=0)||(e!=0)||(f!=0)) &&
-                      1 >= a &&
-                      1 >= b &&
-                      1 >= c &&
-                      1 >= d &&
-                      1 >= e &&
-                      1 >= f) ? 1 : 0,
-                      Field_NumMinesNeighboring(F,coordinates));
-  }
-  }
-  }
-  }
-  }
+    coordinates[0] = a;
+    for (int b = 0; b < 8; b++)
+    {
+      coordinates[1] = b;
+      for (int c = 0; c < 8; c++)
+      {
+        coordinates[2] = c;
+        for (int d = 0; d < 8; d++)
+        {
+          coordinates[3] = d;
+          for (int e = 0; e < 8; e++)
+          {
+            coordinates[4] = e;
+            for (int f = 0; f < 8; f++)
+            {
+              coordinates[5] = f;
+              TEST_ASSERT_EQUAL((((0!=a)||(0!=b)||(0!=c)||(0!=d)||(0!=e)||(0!=f)) &&
+                                1 >= a &&
+                                1 >= b &&
+                                1 >= c &&
+                                1 >= d &&
+                                1 >= e &&
+                                1 >= f) ? 1 : 0,
+                                Field_NumMinesNeighboring(F,coordinates));
+            }
+          }
+        }
+      }
+    }
   }
   Field_Destroy(F);
+}
+
+void test_FieldModel_OnlyCountsImmediateNeighborsForMines(void)
+{
+  FieldPtr F;
+  unsigned int coordinates[6] = {0};
+  F = Field_Create(6,8);
+  for (int a = 0; a < 8; a++)
+  {
+    coordinates[0] = a;
+    for (int b = 0; b < 8; b++)
+    {
+      coordinates[1] = b;
+      for (int c = 0; c < 8; c++)
+      {
+        coordinates[2] = c;
+        for (int d = 0; d < 8; d++)
+        {
+          coordinates[3] = d;
+          for (int e = 0; e < 8; e++)
+          {
+            coordinates[4] = e;
+            for (int f = 0; f < 8; f++)
+            {
+              coordinates[5] = f;
+              Field_PlaceMine(F,coordinates);
+            }
+          }
+        }
+      }
+    }
+  }
+  coordinates[0] = 1;
+  coordinates[1] = 1;
+  coordinates[2] = 1;
+  coordinates[3] = 1;
+  coordinates[4] = 1;
+  coordinates[5] = 1;
+  TEST_ASSERT_EQUAL(728,Field_NumMinesNeighboring(F,coordinates));
 }
 
 #endif // TEST
