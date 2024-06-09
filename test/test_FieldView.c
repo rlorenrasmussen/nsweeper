@@ -132,6 +132,104 @@ void test_FieldView_DrawsCompletePane2ToBuffer(void)
   fclose(fptr);
 }
 
+void test_FieldView_DrawsCompletePane3ToBuffer(void)
+{
+  unsigned int paneVector[4] = {6,1,3,4};
+  unsigned int coordinates[6] = {0};
+  FILE* fptr;
+  F = Field_Create(6,8);
+  (void) FieldView_Init(F,&ScreenBuffer);
+
+  for (int i = 0; i < 4; i++)
+  {
+    coordinates[i] = paneVector[i];
+  }
+  coordinates[4] = 0;
+  coordinates[5] = 0;
+  Field_Reveal(F,coordinates);
+
+  coordinates[5] += 1;
+  Field_PlaceMine(F,coordinates);
+  Field_Flag(F,coordinates);
+
+  coordinates[5] += 1;
+  Field_Flag(F,coordinates);
+
+  coordinates[5] = 2;
+  coordinates[3] += 1;
+  coordinates[2] -= 1;
+  coordinates[1] += 1;
+  coordinates[0] -= 1;
+  Field_PlaceMine(F,coordinates);
+
+  for (int i = 0; i < 4; i++)
+  {
+    coordinates[i] = paneVector[i];
+  }
+  for (int j = 1; j < 3; j++)
+  {
+    coordinates[4] = j;
+    for (int i = 0; i < 3; i++)
+    {
+      coordinates[5] = i;
+      Field_Reveal(F,coordinates);
+    }
+  }
+
+  coordinates[4] = 3;
+  coordinates[5] = 3;
+  Field_Reveal(F,coordinates);
+
+  coordinates[4] = 4;
+  coordinates[5] = 2;
+  Field_Flag(F,coordinates);
+  
+  coordinates[0] = paneVector[0];
+  for (int v = paneVector[1]-1; v <= paneVector[1]+1; v++)
+  {
+    coordinates[1] = v;
+    for (int w = paneVector[2]-1; w <= paneVector[2]+1; w++)
+    {
+      coordinates[2] = w;
+      for (int x = paneVector[3]-1; x <= paneVector[3]+1; x++)
+      {
+        coordinates[3] = x;
+        for (int y = 4; y <= 6; y++)
+        {
+          coordinates[4] = y;
+          for (int z = 5; z <= 7; z++)
+          {
+            coordinates[5] = z;
+            if (paneVector[0] == coordinates[0] &&
+                paneVector[1] == coordinates[1] &&
+                paneVector[2] == coordinates[2] &&
+                paneVector[3] == coordinates[3] &&
+                5 == y &&
+                6 == z)
+            {
+              continue;
+            }
+            Field_PlaceMine(F,coordinates);
+          }
+        }
+      }
+    }
+  }
+
+  for (int i = 0; i < 4; i++)
+  {
+    coordinates[i] = paneVector[i];
+  }
+  coordinates[4] = 5;
+  coordinates[5] = 6;
+  Field_Reveal(F,coordinates);
+
+  FieldView_Draw(paneVector);
+  fptr = fopen("/home/loren/Dev/c/nsweeper/test/assets/sampleview3","r");
+  bufferMatchesFile(ScreenBuffer,fptr);
+  fclose(fptr);
+}
+
 void ignore_FieldView_ReportsPaneVector(void)
 {
 }

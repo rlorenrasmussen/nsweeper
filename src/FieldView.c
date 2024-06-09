@@ -5,6 +5,15 @@ typedef Screen_t* ScreenPtr;
 static FieldPtr FIELD_;
 static ScreenPtr SCREEN_;
 
+static const char rmf = '.';
+static const char rmF = 'F';
+static const char rMf = '.';
+static const char rMF = 'F';
+static const char Rmf = ' ';
+static const char RmF = '?';
+static const char RMf = 'X';
+static const char RMF = '?';
+
 static void drawInterRowLine(ScreenPtr S,
                              unsigned int* lN,
                              const unsigned int cW)
@@ -33,7 +42,7 @@ static void drawRow(ScreenPtr S,
                     unsigned int* coordinates,
                     unsigned int dim)
 {
-  unsigned int colNum, cellNum;
+  unsigned int colNum, cellNum, cellOffset, sLen;
   char fieldSymbol[cW];
 
   colNum = 0;
@@ -51,34 +60,74 @@ static void drawRow(ScreenPtr S,
       {
         if (Field_GetFlagged(F,coordinates))
         {
-          // fieldSymbol = 'M';
-          sprintf(fieldSymbol,"M");
+          sprintf(fieldSymbol,"%c",RMF);
+        }
+        else // revealed, mined, no flag
+        {
+          sprintf(fieldSymbol,"%c",RMf);
+        }
+      }
+      else // revealed, no mine
+      {
+        unsigned int numMines = Field_NumMinesNeighboring(F,coordinates);
+        if (0 != numMines)
+        {
+          sprintf(fieldSymbol,"%d",Field_NumMinesNeighboring(F,coordinates));
         }
         else
         {
-          // fieldSymbol = 'X';
-          sprintf(fieldSymbol,"X");
+          sprintf(fieldSymbol,"%c",Rmf);
+        }
+      }
+    }
+    else // unrevealed
+    {
+      if (Field_GetMined(F,coordinates))
+      {
+        if (Field_GetFlagged(F,coordinates))
+        {
+          sprintf(fieldSymbol,"%c",rMF);
+        }
+        else
+        {
+          sprintf(fieldSymbol,"%c",rMf);
         }
       }
       else
       {
-        // fieldSymbol = '0';
-        sprintf(fieldSymbol,"%d",Field_NumMinesNeighboring(F,coordinates));
+        if (Field_GetFlagged(F,coordinates))
+        {
+          sprintf(fieldSymbol,"%c",rmF);
+        }
+        else
+        {
+          sprintf(fieldSymbol,"%c",rmf);
+        }
       }
     }
-    else
-    {
-      // fieldSymbol = ' ';
-      sprintf(fieldSymbol," ");
+    for (int i = 0; i < cW; i++) {
+      *(SCREEN_->buff[*lN]+colNum+i) = ' ';
     }
-    (void) sprintf(SCREEN_->buff[*lN]+colNum,"  %s  ",fieldSymbol);
-    colNum += 5;
+    sLen = strlen(fieldSymbol);
+    cellOffset = (cW-sLen);
+    cellOffset += cellOffset % 2;
+    cellOffset >>= 1;
+    (void) sprintf(SCREEN_->buff[*lN]+colNum+cellOffset,"%s",fieldSymbol);
+    *(SCREEN_->buff[*lN]+colNum+cellOffset+strlen(fieldSymbol)) = ' ';
+    colNum += cW;
     (void) sprintf(SCREEN_->buff[*lN]+colNum,"|");
     colNum++;
     cellNum++;
   }
   (void) sprintf(SCREEN_->buff[*lN]+colNum,"\n");
 }
+
+/*
+'|  X  |  26 |  X  |\n'
+'|  X  | 26  |  X  |\n'
+'+-----+-----+-----+-----+-----+-----+-----+-----+    - - - -'
+'+-----+-----+-----+-----+-----+-----+-----+-----+    - - - -\n'
+*/
 
 static void drawPaneVectorControls(ScreenPtr S,
                                    FieldPtr F,
