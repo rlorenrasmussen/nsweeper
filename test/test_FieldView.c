@@ -7,10 +7,10 @@
 #include "FieldModel.h"
 #include "FieldView.h"
 
-// TODO: given some pane vector, output specified pane to a display buffer
+// DONE: given some pane vector, output specified pane to a display buffer
 // TODO: render the display buffer onto the screen
-// TODO: report stored pane vector
 // TODO: increment/decrement one axis of pane vector
+// TODO: reject out-of-bounds increment/decrement arguments
 
 #define SCREEN_W (100)
 #define SCREEN_H (60)
@@ -67,8 +67,9 @@ void tearDown(void)
 void test_FieldView_InitializesWithFieldPtr(void)
 {
   bool result;
+  unsigned int paneVector[1] = {0};
   F = Field_Create(3,3);
-  result = FieldView_Init(F,&ScreenBuffer);
+  result = FieldView_Init(F,&ScreenBuffer,paneVector);
   TEST_ASSERT_TRUE(result);
 }
 
@@ -76,13 +77,15 @@ void test_FieldView_ReportsPaneVectorSize(void)
 {
   unsigned int size;
   bool result;
-  for (int i = 1; i <= 6; i++)
+  unsigned int* paneVector;
+  for (int i = 2; i <= 6; i++)
   {
     F = Field_Create(i,4);
-    result = FieldView_Init(F,&ScreenBuffer);
+    paneVector = calloc(i-2,sizeof(unsigned int));
+    result = FieldView_Init(F,&ScreenBuffer,paneVector);
     TEST_ASSERT_TRUE(result);
     size = FieldView_GetPaneVectorSize();
-    TEST_ASSERT_EQUAL(i,size);
+    TEST_ASSERT_EQUAL(i-2,size);
   }
 }
 
@@ -113,8 +116,8 @@ void test_FieldView_DrawsCompletePane1ToBuffer(void)
       }
     }
   }
-  (void) FieldView_Init(F,&ScreenBuffer);
-  FieldView_Draw(paneVector);
+  (void) FieldView_Init(F,&ScreenBuffer,paneVector);
+  FieldView_Draw();
   fptr = fopen("/home/loren/Dev/c/nsweeper/test/assets/sampleview1","r");
   bufferMatchesFile(ScreenBuffer,fptr);
   fclose(fptr);
@@ -125,8 +128,8 @@ void test_FieldView_DrawsCompletePane2ToBuffer(void)
   unsigned int paneVector[4] = {7,1,0,6};
   FILE* fptr;
   F = Field_Create(6,8);
-  (void) FieldView_Init(F,&ScreenBuffer);
-  FieldView_Draw(paneVector);
+  (void) FieldView_Init(F,&ScreenBuffer,paneVector);
+  FieldView_Draw();
   fptr = fopen("/home/loren/Dev/c/nsweeper/test/assets/sampleview2","r");
   bufferMatchesFile(ScreenBuffer,fptr);
   fclose(fptr);
@@ -138,7 +141,7 @@ void test_FieldView_DrawsCompletePane3ToBuffer(void)
   unsigned int coordinates[6] = {0};
   FILE* fptr;
   F = Field_Create(6,8);
-  (void) FieldView_Init(F,&ScreenBuffer);
+  (void) FieldView_Init(F,&ScreenBuffer,paneVector);
 
   for (int i = 0; i < 4; i++)
   {
@@ -224,8 +227,161 @@ void test_FieldView_DrawsCompletePane3ToBuffer(void)
   coordinates[5] = 6;
   Field_Reveal(F,coordinates);
 
-  FieldView_Draw(paneVector);
+  FieldView_Draw();
   fptr = fopen("/home/loren/Dev/c/nsweeper/test/assets/sampleview3","r");
+  bufferMatchesFile(ScreenBuffer,fptr);
+  fclose(fptr);
+}
+
+void test_FieldView_IncrementDecrementPaneVector(void)
+{
+  unsigned int paneVector[4] = {6,1,3,4};
+  unsigned int coordinates[6] = {0};
+  FILE* fptr;
+  F = Field_Create(6,8);
+  (void) FieldView_Init(F,&ScreenBuffer,paneVector);
+
+  for (int i = 0; i < 4; i++)
+  {
+    coordinates[i] = paneVector[i];
+  }
+  coordinates[4] = 0;
+  coordinates[5] = 0;
+  Field_Reveal(F,coordinates);
+
+  coordinates[5] += 1;
+  Field_PlaceMine(F,coordinates);
+  Field_Flag(F,coordinates);
+
+  coordinates[5] += 1;
+  Field_Flag(F,coordinates);
+
+  coordinates[5] = 2;
+  coordinates[3] += 1;
+  coordinates[2] -= 1;
+  coordinates[1] += 1;
+  coordinates[0] -= 1;
+  Field_PlaceMine(F,coordinates);
+
+  for (int i = 0; i < 4; i++)
+  {
+    coordinates[i] = paneVector[i];
+  }
+  for (int j = 1; j < 3; j++)
+  {
+    coordinates[4] = j;
+    for (int i = 0; i < 3; i++)
+    {
+      coordinates[5] = i;
+      Field_Reveal(F,coordinates);
+    }
+  }
+
+  coordinates[4] = 3;
+  coordinates[5] = 3;
+  Field_Reveal(F,coordinates);
+
+  coordinates[4] = 4;
+  coordinates[5] = 2;
+  Field_Flag(F,coordinates);
+  
+  coordinates[0] = paneVector[0];
+  for (int v = paneVector[1]-1; v <= paneVector[1]+1; v++)
+  {
+    coordinates[1] = v;
+    for (int w = paneVector[2]-1; w <= paneVector[2]+1; w++)
+    {
+      coordinates[2] = w;
+      for (int x = paneVector[3]-1; x <= paneVector[3]+1; x++)
+      {
+        coordinates[3] = x;
+        for (int y = 4; y <= 6; y++)
+        {
+          coordinates[4] = y;
+          for (int z = 5; z <= 7; z++)
+          {
+            coordinates[5] = z;
+            if (paneVector[0] == coordinates[0] &&
+                paneVector[1] == coordinates[1] &&
+                paneVector[2] == coordinates[2] &&
+                paneVector[3] == coordinates[3] &&
+                5 == y &&
+                6 == z)
+            {
+              continue;
+            }
+            Field_PlaceMine(F,coordinates);
+          }
+        }
+      }
+    }
+  }
+
+  coordinates[0] = 6;
+  coordinates[1] = 2;
+  coordinates[2] = 3;
+  coordinates[3] = 4;
+  for (int y = 0; y < 8; y++)
+  {
+    coordinates[4] = y;
+    for (int z = 0; z < 8; z++)
+    {
+      coordinates[5] = z;
+      Field_Reveal(F,coordinates);
+    }
+  }
+
+  for (int i = 0; i < 4; i++)
+  {
+    coordinates[i] = paneVector[i];
+  }
+  coordinates[4] = 5;
+  coordinates[5] = 6;
+  Field_Reveal(F,coordinates);
+  FieldView_Draw();
+  FieldView_IncrementPaneVector(1); // increment axis 1 (0-indexed) of the pane vector
+  FieldView_Draw();
+  fptr = fopen("/home/loren/Dev/c/nsweeper/test/assets/sampleview4","r");
+  bufferMatchesFile(ScreenBuffer,fptr);
+  fclose(fptr);
+
+  coordinates[0] = 6;
+  coordinates[1] = 2;
+  coordinates[2] = 3;
+  coordinates[3] = 3;
+  for (int y = 0; y < 8; y++)
+  {
+    coordinates[4] = y;
+    for (int z = 0; z < 8; z++)
+    {
+      coordinates[5] = z;
+      if (4 > y)
+      {
+        if (4 > z)
+        {
+          Field_Reveal(F,coordinates);
+        }
+        else
+        {
+          Field_Flag(F,coordinates);
+        }
+      }
+      else
+      {
+        if (4 > z)
+        {
+          Field_Flag(F,coordinates);
+        }
+        else
+        {
+          Field_Reveal(F,coordinates);
+        }
+      }
+    }
+  }
+  FieldView_DecrementPaneVector(3); // decrement axis 3 (0-indexed) of the pane vector
+  FieldView_Draw();
+  fptr = fopen("/home/loren/Dev/c/nsweeper/test/assets/sampleview5","r");
   bufferMatchesFile(ScreenBuffer,fptr);
   fclose(fptr);
 }

@@ -9,6 +9,7 @@
 // TODO: bloom(coordinates) -- check if uncovered and minedNeighbors==0 -> then reveal all neighbors (like flood, but stops at the first layer of neighbors)
 // TODO: save Field to file
 // TODO: retrieve Field from file
+// TODO: forbid revealing flagged cell
 
 void setUp(void)
 {

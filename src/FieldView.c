@@ -4,6 +4,8 @@ typedef Screen_t* ScreenPtr;
 
 static FieldPtr FIELD_;
 static ScreenPtr SCREEN_;
+static unsigned int* PANEVECTOR_;
+static unsigned int DIM_;
 
 static const char rmf = '.';
 static const char rmF = 'F';
@@ -122,13 +124,6 @@ static void drawRow(ScreenPtr S,
   (void) sprintf(SCREEN_->buff[*lN]+colNum,"\n");
 }
 
-/*
-'|  X  |  26 |  X  |\n'
-'|  X  | 26  |  X  |\n'
-'+-----+-----+-----+-----+-----+-----+-----+-----+    - - - -'
-'+-----+-----+-----+-----+-----+-----+-----+-----+    - - - -\n'
-*/
-
 static void drawPaneVectorControls(ScreenPtr S,
                                    FieldPtr F,
                                    unsigned int cellWidth,
@@ -201,7 +196,7 @@ static void clearDisplayBuffer(ScreenPtr S)
   }
 }
 
-void FieldView_Draw(unsigned int* paneVector)
+void FieldView_Draw()
 {
   unsigned int lineNum, rowNum, cellNum;
   unsigned int startLine, endLine, endCol;
@@ -214,7 +209,7 @@ void FieldView_Draw(unsigned int* paneVector)
 
   for (int i = 0; i + 2 < dim; i++)
   {
-    coordinates[i] = paneVector[i];
+    coordinates[i] = PANEVECTOR_[i];
   }
 
   clearDisplayBuffer(SCREEN_);
@@ -232,17 +227,33 @@ void FieldView_Draw(unsigned int* paneVector)
     rowNum++;
   }
   drawInterRowLine(SCREEN_,&lineNum,cellWidth);
-  drawPaneVectorControls(SCREEN_,FIELD_,cellWidth,paneVector);
+  drawPaneVectorControls(SCREEN_,FIELD_,cellWidth,PANEVECTOR_);
 }
 
-bool FieldView_Init(FieldPtr F, Screen_t* S)
+void FieldView_DecrementPaneVector(unsigned int axisNum)
+{
+  PANEVECTOR_[axisNum] -= 1;
+}
+
+void FieldView_IncrementPaneVector(unsigned int axisNum)
+{
+  PANEVECTOR_[axisNum] += 1;
+}
+
+bool FieldView_Init(FieldPtr F,Screen_t* S,unsigned int* paneVector)
 {
   FIELD_ = F;
   SCREEN_ = S;
+  DIM_ = Field_Dimension(FIELD_);
+  PANEVECTOR_ = calloc(DIM_,sizeof(unsigned int));
+  for (int i = 0; i < DIM_-2; i++)
+  {
+    PANEVECTOR_[i] = paneVector[i];
+  }
   return true;
 }
 
 unsigned int FieldView_GetPaneVectorSize(void)
 {
-  return Field_Dimension(FIELD_);
+  return DIM_-2;
 }
