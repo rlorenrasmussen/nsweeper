@@ -4,6 +4,7 @@ struct Field
 {
   unsigned int dim;
   unsigned int scale;
+  bool initialized;
   bool* revealed;
   bool* flagged;
   bool* mined;
@@ -73,6 +74,7 @@ FieldPtr Field_Create(unsigned int dim, unsigned int scale)
   NewField->flagged = calloc(numCells,sizeof(bool));
   NewField->mined = calloc(numCells,sizeof(bool));
   NewField->minedNeighbors = calloc(numCells,sizeof(unsigned int));
+  NewField->initialized = true;
   return NewField;
 }
 
@@ -82,6 +84,7 @@ void Field_Destroy(FieldPtr F)
   {
     return;
   }
+  F->initialized = false;
   free(F->revealed);
   free(F->flagged);
   free(F->mined);
@@ -97,6 +100,10 @@ unsigned int Field_Dimension(FieldPtr F)
 unsigned int Field_Scale(FieldPtr F)
 {
   return F->scale;
+}
+bool Field_Initialized(FieldPtr F)
+{
+  return (NULL != F && F->initialized);
 }
 
 bool Field_GetRevealed(FieldPtr F, unsigned int* coordinates)

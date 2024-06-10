@@ -9,8 +9,11 @@
 
 // DONE: given some pane vector, output specified pane to a display buffer
 // TODO: render the display buffer onto the screen
-// TODO: increment/decrement one axis of pane vector
-// TODO: reject out-of-bounds increment/decrement arguments
+// DONE: increment/decrement one axis of pane vector
+// DONE: reject out-of-bounds increment/decrement arguments
+// TODO: report 0 for out-of-bounds paneVector queries
+// DONE: reject all commands before initialization
+// TODO: init defaults to paneVector {0} when paneVector provided is NULL
 
 #define SCREEN_W (100)
 #define SCREEN_H (60)
@@ -56,7 +59,7 @@ void setUp(void)
 
 void tearDown(void)
 {
-  Field_Destroy(F);
+  FieldView_CleanUp();
   for (int i = 0; i < SCREEN_H; i++)
   {
     free(ScreenBuffer.buff[i]);
@@ -73,6 +76,15 @@ void test_FieldView_InitializesWithFieldPtr(void)
   TEST_ASSERT_TRUE(result);
 }
 
+void test_FieldView_InitializeRejectsUninitializedField(void)
+{
+  bool result;
+  unsigned int paneVector[1] = {0};
+  // F is uninitialized
+  result = FieldView_Init(F,&ScreenBuffer,paneVector);
+  TEST_ASSERT_FALSE(result);
+}
+
 void test_FieldView_ReportsPaneVectorSize(void)
 {
   unsigned int size;
@@ -87,6 +99,19 @@ void test_FieldView_ReportsPaneVectorSize(void)
     size = FieldView_GetPaneVectorSize();
     TEST_ASSERT_EQUAL(i-2,size);
   }
+}
+
+void test_FieldView_ReportsZeroForPaneVectorSizeWhenUninitialized(void)
+{
+  unsigned int paneVector[1] = {0};
+  TEST_ASSERT_FALSE(FieldView_Initialized());
+  TEST_ASSERT_EQUAL(0,FieldView_GetPaneVectorSize());
+}
+
+void test_FieldView_NoSegfaultOnDrawWhenUninitialized(void)
+{
+  TEST_ASSERT_FALSE(FieldView_Initialized());
+  FieldView_Draw();
 }
 
 void test_FieldView_DrawsCompletePane1ToBuffer(void)
@@ -126,9 +151,11 @@ void test_FieldView_DrawsCompletePane1ToBuffer(void)
 void test_FieldView_DrawsCompletePane2ToBuffer(void)
 {
   unsigned int paneVector[4] = {7,1,0,6};
+  unsigned int coordinates[6] = {7,1,0,6,5,3};
   FILE* fptr;
   F = Field_Create(6,8);
   (void) FieldView_Init(F,&ScreenBuffer,paneVector);
+  Field_Reveal(F,coordinates);
   FieldView_Draw();
   fptr = fopen("/home/loren/Dev/c/nsweeper/test/assets/sampleview2","r");
   bufferMatchesFile(ScreenBuffer,fptr);
@@ -386,8 +413,242 @@ void test_FieldView_IncrementDecrementPaneVector(void)
   fclose(fptr);
 }
 
-void ignore_FieldView_ReportsPaneVector(void)
+void test_FieldView_RejectsIncrementDecrementOOB(void)
 {
+  unsigned int paneVector[4] = {6,1,3,4};
+  unsigned int coordinates[6] = {0};
+  FILE* fptr;
+  F = Field_Create(6,8);
+  (void) FieldView_Init(F,&ScreenBuffer,paneVector);
+
+  for (int i = 0; i < 4; i++)
+  {
+    coordinates[i] = paneVector[i];
+  }
+  coordinates[4] = 0;
+  coordinates[5] = 0;
+  Field_Reveal(F,coordinates);
+
+  coordinates[5] += 1;
+  Field_PlaceMine(F,coordinates);
+  Field_Flag(F,coordinates);
+
+  coordinates[5] += 1;
+  Field_Flag(F,coordinates);
+
+  coordinates[5] = 2;
+  coordinates[3] += 1;
+  coordinates[2] -= 1;
+  coordinates[1] += 1;
+  coordinates[0] -= 1;
+  Field_PlaceMine(F,coordinates);
+
+  for (int i = 0; i < 4; i++)
+  {
+    coordinates[i] = paneVector[i];
+  }
+  for (int j = 1; j < 3; j++)
+  {
+    coordinates[4] = j;
+    for (int i = 0; i < 3; i++)
+    {
+      coordinates[5] = i;
+      Field_Reveal(F,coordinates);
+    }
+  }
+
+  coordinates[4] = 3;
+  coordinates[5] = 3;
+  Field_Reveal(F,coordinates);
+
+  coordinates[4] = 4;
+  coordinates[5] = 2;
+  Field_Flag(F,coordinates);
+  
+  coordinates[0] = paneVector[0];
+  for (int v = paneVector[1]-1; v <= paneVector[1]+1; v++)
+  {
+    coordinates[1] = v;
+    for (int w = paneVector[2]-1; w <= paneVector[2]+1; w++)
+    {
+      coordinates[2] = w;
+      for (int x = paneVector[3]-1; x <= paneVector[3]+1; x++)
+      {
+        coordinates[3] = x;
+        for (int y = 4; y <= 6; y++)
+        {
+          coordinates[4] = y;
+          for (int z = 5; z <= 7; z++)
+          {
+            coordinates[5] = z;
+            if (paneVector[0] == coordinates[0] &&
+                paneVector[1] == coordinates[1] &&
+                paneVector[2] == coordinates[2] &&
+                paneVector[3] == coordinates[3] &&
+                5 == y &&
+                6 == z)
+            {
+              continue;
+            }
+            Field_PlaceMine(F,coordinates);
+          }
+        }
+      }
+    }
+  }
+
+  coordinates[0] = 6;
+  coordinates[1] = 2;
+  coordinates[2] = 3;
+  coordinates[3] = 4;
+  for (int y = 0; y < 8; y++)
+  {
+    coordinates[4] = y;
+    for (int z = 0; z < 8; z++)
+    {
+      coordinates[5] = z;
+      Field_Reveal(F,coordinates);
+    }
+  }
+
+  for (int i = 0; i < 4; i++)
+  {
+    coordinates[i] = paneVector[i];
+  }
+  coordinates[4] = 5;
+  coordinates[5] = 6;
+  Field_Reveal(F,coordinates);
+  FieldView_Draw();
+  FieldView_IncrementPaneVector(-1); // OOB axis
+  FieldView_Draw();
+  fptr = fopen("/home/loren/Dev/c/nsweeper/test/assets/sampleview3","r");
+  bufferMatchesFile(ScreenBuffer,fptr);
+  fclose(fptr);
+  FieldView_IncrementPaneVector(Field_Dimension(F)-2); // OOB axis
+  FieldView_Draw();
+  fptr = fopen("/home/loren/Dev/c/nsweeper/test/assets/sampleview3","r");
+  bufferMatchesFile(ScreenBuffer,fptr);
+  fclose(fptr);
+
+  coordinates[0] = 6;
+  coordinates[1] = 2;
+  coordinates[2] = 3;
+  coordinates[3] = 3;
+  for (int y = 0; y < 8; y++)
+  {
+    coordinates[4] = y;
+    for (int z = 0; z < 8; z++)
+    {
+      coordinates[5] = z;
+      if (4 > y)
+      {
+        if (4 > z)
+        {
+          Field_Reveal(F,coordinates);
+        }
+        else
+        {
+          Field_Flag(F,coordinates);
+        }
+      }
+      else
+      {
+        if (4 > z)
+        {
+          Field_Flag(F,coordinates);
+        }
+        else
+        {
+          Field_Reveal(F,coordinates);
+        }
+      }
+    }
+  }
+  FieldView_DecrementPaneVector(-1); // OOB axis
+  FieldView_Draw();
+  fptr = fopen("/home/loren/Dev/c/nsweeper/test/assets/sampleview3","r");
+  bufferMatchesFile(ScreenBuffer,fptr);
+  fclose(fptr);
+  FieldView_DecrementPaneVector(Field_Dimension(F)-2); // OOB axis
+  FieldView_Draw();
+  fptr = fopen("/home/loren/Dev/c/nsweeper/test/assets/sampleview3","r");
+  bufferMatchesFile(ScreenBuffer,fptr);
+  fclose(fptr);
+}
+
+void test_FieldView_RejectsIncrementDecrementAtEndOfRange(void)
+{
+  unsigned int paneVector[4] = {7,1,0,6};
+  unsigned int coordinates[6] = {7,1,0,6,5,3};
+  FILE* fptr;
+  F = Field_Create(6,8);
+  (void) FieldView_Init(F,&ScreenBuffer,paneVector);
+  Field_Reveal(F,coordinates);
+  FieldView_Draw();
+  fptr = fopen("/home/loren/Dev/c/nsweeper/test/assets/sampleview2","r");
+  bufferMatchesFile(ScreenBuffer,fptr);
+  fclose(fptr);
+  FieldView_IncrementPaneVector(0);
+  FieldView_Draw();
+  fptr = fopen("/home/loren/Dev/c/nsweeper/test/assets/sampleview2","r");
+  bufferMatchesFile(ScreenBuffer,fptr);
+  fclose(fptr);
+  FieldView_DecrementPaneVector(2);
+  FieldView_Draw();
+  fptr = fopen("/home/loren/Dev/c/nsweeper/test/assets/sampleview2","r");
+  bufferMatchesFile(ScreenBuffer,fptr);
+  fclose(fptr);
+}
+
+void test_FieldView_ReportsPaneVectorElements(void)
+{
+  unsigned int paneVector[4] = {3,1,2,0};
+  F = Field_Create(6,4);
+
+  FieldView_Init(F,&ScreenBuffer,paneVector);
+
+  TEST_ASSERT_TRUE(FieldView_Initialized());
+  TEST_ASSERT_EQUAL(4,FieldView_GetPaneVectorSize());
+  for (int i = 0; i < 4; i++)
+  {
+    TEST_ASSERT_EQUAL(paneVector[i],FieldView_GetPaneVectorValue(i));
+  }
+}
+
+void test_FieldView_ReportsZeroAsPaneVectorElementsWhenUninitialized(void)
+{
+  for (int i = 0; i < 1000; i++)
+  {
+    TEST_ASSERT_FALSE(FieldView_Initialized());
+    TEST_ASSERT_EQUAL(0,FieldView_GetPaneVectorValue(i));
+  }
+}
+
+void test_FieldView_ReportsZeroAsPaneVectorElementsWhenOOB(void)
+{
+  unsigned int paneVector[4] = {3,3,3,3};
+  F = Field_Create(6,4);
+
+  FieldView_Init(F,&ScreenBuffer,paneVector);
+
+  for (int i = 4; i < 1000; i++)
+  {
+    TEST_ASSERT_TRUE(i >= FieldView_GetPaneVectorSize());
+    TEST_ASSERT_EQUAL(0,FieldView_GetPaneVectorValue(i));
+  }
+}
+
+void test_FieldView_RejectsIncrementDecrementWhenUninitialized(void)
+{
+  unsigned int currentPos;
+
+  currentPos = FieldView_GetPaneVectorValue(1);
+  FieldView_IncrementPaneVector(1);
+  TEST_ASSERT_FALSE(FieldView_Initialized());
+  TEST_ASSERT_EQUAL(currentPos,FieldView_GetPaneVectorValue(1));
+  FieldView_DecrementPaneVector(1);
+  TEST_ASSERT_FALSE(FieldView_Initialized());
+  TEST_ASSERT_EQUAL(currentPos,FieldView_GetPaneVectorValue(1));
 }
 
 #endif // TEST

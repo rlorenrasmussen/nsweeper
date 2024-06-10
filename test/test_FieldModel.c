@@ -25,7 +25,7 @@ void test_FieldModel_CreateAndDestroyFieldPtr(void)
 
   F = Field_Create(1,1);
 
-  TEST_ASSERT_NOT_EQUAL(NULL,F);
+  TEST_ASSERT_TRUE(Field_Initialized(F));
 
   Field_Destroy(F);
 }
@@ -35,11 +35,11 @@ void test_FieldModel_CreateFailsOnInvalidDimension(void)
   FieldPtr F;
 
   F = Field_Create(0,1);
-  TEST_ASSERT_EQUAL(NULL,F);
+  TEST_ASSERT_FALSE(Field_Initialized(F));
   Field_Destroy(F);
 
   F = Field_Create(FIELD_MAX_DIM+1,1);
-  TEST_ASSERT_EQUAL(NULL,F);
+  TEST_ASSERT_FALSE(Field_Initialized(F));
   Field_Destroy(F);
 }
 
@@ -48,11 +48,11 @@ void test_FieldModel_CreateFailsOnInvalidScale(void)
   FieldPtr F;
 
   F = Field_Create(3,0);
-  TEST_ASSERT_EQUAL(NULL,F);
+  TEST_ASSERT_FALSE(Field_Initialized(F));
   Field_Destroy(F);
 
   F = Field_Create(3,FIELD_MAX_SCALE+1);
-  TEST_ASSERT_EQUAL(NULL,F);
+  TEST_ASSERT_FALSE(Field_Initialized(F));
   Field_Destroy(F);
 }
 

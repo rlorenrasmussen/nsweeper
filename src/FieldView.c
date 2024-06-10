@@ -6,6 +6,7 @@ static FieldPtr FIELD_;
 static ScreenPtr SCREEN_;
 static unsigned int* PANEVECTOR_;
 static unsigned int DIM_;
+static bool INIT_;
 
 static const char rmf = '.';
 static const char rmF = 'F';
@@ -205,6 +206,11 @@ void FieldView_Draw()
   char fieldSymbol;
   const unsigned int cellWidth = 5;
 
+  if (!FieldView_Initialized())
+  {
+    return;
+  }
+
   dim = Field_Dimension(FIELD_);
 
   for (int i = 0; i + 2 < dim; i++)
@@ -232,16 +238,36 @@ void FieldView_Draw()
 
 void FieldView_DecrementPaneVector(unsigned int axisNum)
 {
+  if (!FieldView_Initialized() || 0 > axisNum || (DIM_-2) <= axisNum)
+  {
+    return;
+  }
+  if (0 == PANEVECTOR_[axisNum])
+  {
+    return;
+  }
   PANEVECTOR_[axisNum] -= 1;
 }
 
 void FieldView_IncrementPaneVector(unsigned int axisNum)
 {
+  if (!FieldView_Initialized() || 0 > axisNum || (DIM_-2) <= axisNum)
+  {
+    return;
+  }
+  if (Field_Scale(FIELD_) == 1 + PANEVECTOR_[axisNum])
+  {
+    return;
+  }
   PANEVECTOR_[axisNum] += 1;
 }
 
 bool FieldView_Init(FieldPtr F,Screen_t* S,unsigned int* paneVector)
 {
+  if (false == Field_Initialized(F))
+  {
+    return false;
+  }
   FIELD_ = F;
   SCREEN_ = S;
   DIM_ = Field_Dimension(FIELD_);
@@ -250,10 +276,44 @@ bool FieldView_Init(FieldPtr F,Screen_t* S,unsigned int* paneVector)
   {
     PANEVECTOR_[i] = paneVector[i];
   }
-  return true;
+  INIT_ = true;
+  return INIT_;
+}
+
+bool FieldView_Initialized(void)
+{
+  return INIT_;
+}
+
+unsigned int FieldView_GetPaneVectorValue(unsigned int axisNum)
+{
+  if (!FieldView_Initialized() || FieldView_GetPaneVectorSize() <= axisNum)
+  {
+    return 0;
+  }
+  return PANEVECTOR_[axisNum];
 }
 
 unsigned int FieldView_GetPaneVectorSize(void)
 {
-  return DIM_-2;
+  if (!FieldView_Initialized() || DIM_ <= 2)
+  {
+    return 0;
+  }
+  else
+  {
+    return DIM_-2;
+  }
+}
+
+
+void FieldView_CleanUp(void)
+{
+  if(!FieldView_Initialized())
+  {
+    return;
+  }
+  Field_Destroy(FIELD_);
+  free(PANEVECTOR_);
+  INIT_ = false;
 }
