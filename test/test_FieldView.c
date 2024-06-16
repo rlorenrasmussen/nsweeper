@@ -8,12 +8,12 @@
 #include "FieldView.h"
 
 // DONE: given some pane vector, output specified pane to a display buffer
-// TODO: render the display buffer onto the screen
+// TODO:!! render the display buffer onto the screen
 // DONE: increment/decrement one axis of pane vector
 // DONE: reject out-of-bounds increment/decrement arguments
-// TODO: report 0 for out-of-bounds paneVector queries
+// DONE: report 0 for out-of-bounds paneVector queries
 // DONE: reject all commands before initialization
-// TODO: init defaults to paneVector {0} when paneVector provided is NULL
+// DONE: init defaults to paneVector {0} when paneVector provided is NULL
 
 #define SCREEN_W (100)
 #define SCREEN_H (60)
@@ -649,6 +649,16 @@ void test_FieldView_RejectsIncrementDecrementWhenUninitialized(void)
   FieldView_DecrementPaneVector(1);
   TEST_ASSERT_FALSE(FieldView_Initialized());
   TEST_ASSERT_EQUAL(currentPos,FieldView_GetPaneVectorValue(1));
+}
+
+void test_FieldView_DefaultPaneVectorIsAllZeros(void)
+{
+  F = Field_Create(6,3);
+  FieldView_Init(F,&ScreenBuffer,NULL);
+  for (int i = 0; i < 4; i++)
+  {
+    TEST_ASSERT_EQUAL(0,FieldView_GetPaneVectorValue(i));
+  }
 }
 
 #endif // TEST

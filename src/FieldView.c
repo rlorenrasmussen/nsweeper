@@ -272,9 +272,19 @@ bool FieldView_Init(FieldPtr F,Screen_t* S,unsigned int* paneVector)
   SCREEN_ = S;
   DIM_ = Field_Dimension(FIELD_);
   PANEVECTOR_ = calloc(DIM_,sizeof(unsigned int));
-  for (int i = 0; i < DIM_-2; i++)
+  if (NULL == paneVector)
   {
-    PANEVECTOR_[i] = paneVector[i];
+    for (int i = 0; i < DIM_-2; i++)
+    {
+      PANEVECTOR_[i] = 0;
+    }
+  }
+  else
+  {
+    for (int i = 0; i < DIM_-2; i++)
+    {
+      PANEVECTOR_[i] = paneVector[i];
+    }
   }
   INIT_ = true;
   return INIT_;
