@@ -10,6 +10,7 @@
 // TODO: save Field to file
 // TODO: retrieve Field from file
 // TODO: forbid revealing flagged cell
+// TODO: change scale max based on dimension (targeting a max memory size)
 
 void setUp(void)
 {
