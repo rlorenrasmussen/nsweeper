@@ -71,7 +71,11 @@
 # For more information on these options, see docs in plugins/gcov
 :gcov:
   :reports:
+    - HtmlBasic
     - HtmlDetailed
+    - Text
+  :html_report: true
+  :html_report_type: detailed
   :gcovr:
     :html_medium_threshold: 75
     :html_high_threshold: 90
@@ -99,4 +103,5 @@
   :enabled:
     - stdout_pretty_tests_report
     - module_generator
+    - gcov
 ...
