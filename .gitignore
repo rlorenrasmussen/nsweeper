@@ -1,4 +1,5 @@
 *.o
 *.d
-build/
+build/test/
+build/gcov/
 *.swp
