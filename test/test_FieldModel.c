@@ -27,6 +27,9 @@ void test_FieldModel_CreateAndDestroyFieldPtr(void)
   F = Field_Create(1,1);
 
   TEST_ASSERT_TRUE(Field_Initialized(F));
+  TEST_ASSERT_FALSE(Field_Initialized(NULL));
+  F.initialized = false;
+  TEST_ASSERT_FALSE(Field_Initialized(F));
 
   Field_Destroy(F);
 }
